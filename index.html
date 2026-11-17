@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Stars 2X Tap</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0; padding: 0; height: 100vh;
+            background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
+            color: white; font-family: 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            user-select: none; overflow: hidden;
+        }
+        .header { text-align: center; margin-top: 25px; }
+        .score { font-size: 46px; font-weight: 800; color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+        .goal { font-size: 14px; color: #94a3b8; margin-top: 5px; }
+        .coin-btn {
+            width: 240px; height: 240px; border-radius: 50%;
+            background: radial-gradient(circle, #fde047 0%, #d97706 100%);
+            box-shadow: 0 0 50px rgba(245, 158, 11, 0.6), inset 0 0 20px #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 110px; cursor: pointer; transition: transform 0.08s;
+            position: relative;
+        }
+        .coin-btn:active { transform: scale(0.93); }
+        .floating {
+            position: absolute; font-size: 28px; font-weight: bold; color: #fff;
+            pointer-events: none; animation: floatUp 0.8s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-90px); }
+        }
+        .footer { width: 85%; margin-bottom: 30px; text-align: center; }
+        .energy-bar { width: 100%; height: 14px; background: #1e293b; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+        .energy-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #fbbf24); width: 100%; transition: width 0.2s; }
+        .save-btn {
+            background: #22c55e; color: white; border: none; padding: 14px 30px;
+            font-size: 16px; font-weight: bold; border-radius: 12px; width: 100%; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="goal" id="goal-text">🎯 Goal: 1,000,000 = 100 ⭐️</div>
+        <div class="score" id="score">0</div>
+    </div>
+
+    <div class="coin-btn" id="coin">⭐️</div>
+
+    <div class="footer">
+        <div id="energy-text">⚡ 1000 / 1000</div>
+        <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
+        <button class="save-btn" id="save-btn" onclick="saveAndExit()">💾 Save & Exit</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const params = new URLSearchParams(window.location.search);
+        let coins = parseInt(params.get('coins')) || 0;
+        let tapPower = parseInt(params.get('tap')) || 1;
+        let maxEnergy = parseInt(params.get('energy')) || 1000;
+        let lang = params.get('lang') || 'en';
+        let energy = maxEnergy;
+
+        // 3 ta til uchun UI tarjimalar
+        const UI_LANG = {
+            uz: { goal: "🎯 Maqsad: 1,000,000 = 100 ⭐️", save: "💾 Saqlash va Menyuga qaytish" },
+            en: { goal: "🎯 Goal: 1,000,000 = 100 ⭐️", save: "💾 Save & Back to Menu" },
+            ru: { goal: "🎯 Цель: 1,000,000 = 100 ⭐️", save: "💾 Сохранить и выйти" }
+        };
+
+        document.getElementById('goal-text').innerText = UI_LANG[lang].goal;
+        document.getElementById('save-btn').innerText = UI_LANG[lang].save;
+
+        const scoreEl = document.getElementById('score');
+        const energyText = document.getElementById('energy-text');
+        const energyFill = document.getElementById('energy-fill');
+        const coinBtn = document.getElementById('coin');
+
+        function updateUI() {
+            scoreEl.innerText = coins.toLocaleString();
+            energyText.innerText = `⚡ ${energy} / ${maxEnergy}`;
+            energyFill.style.width = (energy / maxEnergy * 100) + '%';
+        }
+
+        coinBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.touches.length; i++) {
+                if (energy >= tapPower) {
+                    coins += tapPower;
+                    energy -= tapPower;
+                    tg.HapticFeedback.impactOccurred('medium');
+                    showFloatingText(e.touches[i].clientX, e.touches[i].clientY, `+${tapPower}`);
+                }
+            }
+            updateUI();
+        });
+
+        function showFloatingText(x, y, text) {
+            const el = document.createElement('div');
+            el.className = 'floating';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.innerText = text;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 3);
+                updateUI();
+            }
+        }, 1000);
+
+        function saveAndExit() {
+            tg.sendData(JSON.stringify({ coins: coins }));
+            tg.close();
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
