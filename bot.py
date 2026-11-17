@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 API_TOKEN = "9024406358:AAGKtZAbhfHCrMMgTC2Zh5gswThDbGMYk4M"
-WEBAPP_URL = "https://SIZNING-SAYTINGIZ-MANZILI.vercel.app"
+WEBAPP_URL = "https://islombeik.github.io/Tapstars/
 ADMIN_ID = 8444733475  # O'zingizning Telegram ID raqamingiz
 
 bot = Bot(token=API_TOKEN)
